@@ -67,3 +67,15 @@ export async function decreaseStock(
 
     if (error) throw error;
 }
+
+export async function getProductBySlug(slug: string) {
+    const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("slug", slug)
+        .single();
+
+    if (error) throw error;
+
+    return data;
+}

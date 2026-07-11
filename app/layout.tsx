@@ -1,8 +1,11 @@
 import "./globals.css";
 
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+
 export const metadata = {
   title: "Avocado Shop",
-  description: "Tienda Online",
+  description: "Tecnología",
 };
 
 export default function RootLayout({
@@ -12,7 +15,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+
+      <body className="bg-gray-100">
+
+        <Header />
+
+        {children}
+
+        <Footer />
+
+      </body>
+
     </html>
   );
 }
