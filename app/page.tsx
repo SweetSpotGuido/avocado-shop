@@ -1,28 +1,79 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Link from "next/link";
+import HomeProducts from "@/components/HomeProducts";
 
-export default function Home() {
-  return (
-    <>
-      <Header />
+export default function HomePage() {
+    return (
+        <main>
 
-      <main className="max-w-7xl mx-auto p-8">
+            <section className="bg-gradient-to-r from-green-600 to-green-400 text-white">
 
-        <section className="bg-green-100 rounded-xl p-16 text-center">
+                <div className="max-w-7xl mx-auto px-8 py-24">
 
-          <h1 className="text-5xl font-bold">
-            Bienvenido a Avocado Shop
-          </h1>
+                    <h1 className="text-6xl font-black">
+                        Tecnología al mejor precio
+                    </h1>
 
-          <p className="mt-6 text-xl">
-            Comprá tecnología al mejor precio.
-          </p>
+                    <p className="text-2xl mt-6 max-w-2xl">
+                        Comprá auriculares, relojes inteligentes y accesorios.
+                    </p>
 
-        </section>
+                    <Link
+                        href="/productos"
+                        className="inline-block mt-10 bg-white text-green-700 px-8 py-4 rounded-xl font-bold"
+                    >
+                        Ver productos
+                    </Link>
 
-      </main>
+                </div>
 
-      <Footer />
-    </>
-  );
+            </section>
+
+            <HomeProducts />
+
+            <section className="bg-white py-20">
+
+                <div className="max-w-7xl mx-auto grid grid-cols-3 gap-8">
+
+                    <div className="rounded-xl border p-8">
+
+                        <h3 className="text-2xl font-bold">
+                            🚚 Envíos
+                        </h3>
+
+                        <p className="mt-4">
+                            Envíos a todo el país.
+                        </p>
+
+                    </div>
+
+                    <div className="rounded-xl border p-8">
+
+                        <h3 className="text-2xl font-bold">
+                            💳 Pagos
+                        </h3>
+
+                        <p className="mt-4">
+                            Mercado Pago.
+                        </p>
+
+                    </div>
+
+                    <div className="rounded-xl border p-8">
+
+                        <h3 className="text-2xl font-bold">
+                            🛡 Garantía
+                        </h3>
+
+                        <p className="mt-4">
+                            Garantía oficial.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+    );
 }

@@ -31,21 +31,34 @@ export default function CheckoutPage() {
 
     async function finishOrder() {
 
-        const order = await createOrder({
-            ...form,
-            total,
-            status: "Pendiente",
-        });
+        const response = await fetch(
+            "/api/create-preference",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
 
-        await createOrderItems(order.id, cart);
+                    items: cart.map(item => ({
 
-        for (const item of cart) {
-            await decreaseStock(item.id, item.quantity);
-        }
+                        title: item.name,
 
-        clearCart();
+                        quantity: item.quantity,
 
-        router.push(`/order-success?id=${order.id}`);
+                        currency_id: "ARS",
+
+                        unit_price: Number(item.price),
+
+                    })),
+
+                }),
+            }
+        );
+
+        const preference = await response.json();
+
+        window.location.href = preference.init_point;
 
     }
 

@@ -1,165 +1,330 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+
 import ImageUpload from "@/components/ImageUpload";
+import { getCategories } from "@/lib/category-service";
 import {
-  getProduct,
-  updateProduct,
+    getProduct,
+    updateProduct,
 } from "@/lib/product-service";
 
+import { ProductInput } from "@/types/product";
+
+interface Category {
+    id: number;
+    name: string;
+}
+
 export default function EditProductPage() {
-  const { id } = useParams();
-  const router = useRouter();
+    const { id } = useParams();
+    const router = useRouter();
 
-  const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
-  const [product, setProduct] = useState({
-    name: "",
-    slug: "",
-    description: "",
-    category: "",
-    price: 0,
-    stock: 0,
-    image_url: "",
-    active: true,
-  });
+    const [categories, setCategories] = useState<Category[]>([]);
 
-  useEffect(() => {
-    load();
-  }, []);
+    const [product, setProduct] = useState<ProductInput>({
+        name: "",
+        slug: "",
+        description: "",
 
-  async function load() {
-    const data = await getProduct(Number(id));
+        category_id: 0,
 
-    setProduct(data);
+        sku: "",
+        barcode: "",
 
-    setLoading(false);
-  }
+        image_url: "",
 
-  async function save() {
-    await updateProduct(Number(id), product);
+        price: 0,
+        price_old: 0,
 
-    router.push("/admin/products");
-  }
+        stock: 0,
 
-  if (loading) return <div>Cargando...</div>;
+        weight: 0,
+        width: 0,
+        height: 0,
+        depth: 0,
 
-  return (
-    <div className="max-w-4xl">
+        featured: false,
+        active: true,
+    });
 
-      <h1 className="text-3xl font-bold mb-8">
-        Editar Producto
-      </h1>
+    const load = useCallback(async () => {
+        const [productData, categoriesData] = await Promise.all([
+            getProduct(Number(id)),
+            getCategories(),
+        ]);
 
-      <div className="bg-white rounded-xl shadow p-8 space-y-5">
+        if (productData) {
+            const { id: _, created_at: __, ...rest } = productData as any;
+            setProduct(rest);
+        }
 
-        <ImageUpload
-          value={product.image_url}
-          onChange={(url) =>
-            setProduct({
-              ...product,
-              image_url: url,
-            })
-          }
-        />
+        setCategories(categoriesData);
+        setLoading(false);
+    }, [id]);
 
-        <input
-          className="border rounded w-full p-3"
-          value={product.name}
-          placeholder="Nombre"
-          onChange={(e) =>
-            setProduct({
-              ...product,
-              name: e.target.value,
-              slug: e.target.value
-                .toLowerCase()
-                .replace(/\s+/g, "-"),
-            })
-          }
-        />
+    useEffect(() => {
+        load();
+    }, [load]);
 
-        <textarea
-          rows={6}
-          className="border rounded w-full p-3"
-          value={product.description}
-          placeholder="Descripción"
-          onChange={(e) =>
-            setProduct({
-              ...product,
-              description: e.target.value,
-            })
-          }
-        />
+    async function save() {
+        await updateProduct(Number(id), product);
+        router.push("/admin/products");
+    }
 
-        <input
-          className="border rounded w-full p-3"
-          value={product.category}
-          placeholder="Categoría"
-          onChange={(e) =>
-            setProduct({
-              ...product,
-              category: e.target.value,
-            })
-          }
-        />
+    if (loading) {
+        return <div>Cargando...</div>;
+    }
 
-        <div className="grid grid-cols-2 gap-5">
+    return (
+        <main className="max-w-5xl mx-auto">
 
-          <input
-            type="number"
-            className="border rounded p-3"
-            value={product.price}
-            placeholder="Precio"
-            onChange={(e) =>
-              setProduct({
-                ...product,
-                price: Number(e.target.value),
-              })
-            }
-          />
+            <h1 className="text-4xl font-bold mb-10">
+                Editar Producto
+            </h1>
 
-          <input
-            type="number"
-            className="border rounded p-3"
-            value={product.stock}
-            placeholder="Stock"
-            onChange={(e) =>
-              setProduct({
-                ...product,
-                stock: Number(e.target.value),
-              })
-            }
-          />
+            <div className="bg-white rounded-xl shadow p-8 space-y-6">
 
-        </div>
+                <ImageUpload
+                    value={product.image_url}
+                    onChange={(url) =>
+                        setProduct((prev) => ({
+                            ...prev,
+                            image_url: url,
+                        }))
+                    }
+                />
 
-        <label className="flex items-center gap-3">
+                <input
+                    className="border rounded-lg p-3 w-full"
+                    placeholder="Nombre"
+                    value={product.name}
+                    onChange={(e) =>
+                        setProduct((prev) => ({
+                            ...prev,
+                            name: e.target.value,
+                            slug: e.target.value
+                                .toLowerCase()
+                                .replace(/\s+/g, "-"),
+                        }))
+                    }
+                />
 
-          <input
-            type="checkbox"
-            checked={product.active}
-            onChange={(e) =>
-              setProduct({
-                ...product,
-                active: e.target.checked,
-              })
-            }
-          />
+                <textarea
+                    rows={5}
+                    className="border rounded-lg p-3 w-full"
+                    placeholder="Descripción"
+                    value={product.description}
+                    onChange={(e) =>
+                        setProduct((prev) => ({
+                            ...prev,
+                            description: e.target.value,
+                        }))
+                    }
+                />
 
-          Producto activo
+                <div className="grid grid-cols-2 gap-5">
 
-        </label>
+                    <select
+                        className="border rounded-lg p-3"
+                        value={product.category_id}
+                        onChange={(e) =>
+                            setProduct((prev) => ({
+                                ...prev,
+                                category_id: Number(e.target.value),
+                            }))
+                        }
+                    >
+                        <option value={0}>
+                            Seleccionar categoría
+                        </option>
 
-        <button
-          onClick={save}
-          className="bg-green-600 text-white px-8 py-3 rounded-lg"
-        >
-          Guardar Cambios
-        </button>
+                        {categories.map((category) => (
+                            <option
+                                key={category.id}
+                                value={category.id}
+                            >
+                                {category.name}
+                            </option>
+                        ))}
 
-      </div>
+                    </select>
 
-    </div>
-  );
+                    <input
+                        className="border rounded-lg p-3"
+                        placeholder="SKU"
+                        value={product.sku}
+                        onChange={(e) =>
+                            setProduct((prev) => ({
+                                ...prev,
+                                sku: e.target.value,
+                            }))
+                        }
+                    />
+
+                    <input
+                        className="border rounded-lg p-3"
+                        placeholder="Código de barras"
+                        value={product.barcode}
+                        onChange={(e) =>
+                            setProduct((prev) => ({
+                                ...prev,
+                                barcode: e.target.value,
+                            }))
+                        }
+                    />
+
+                </div>
+
+                <div className="grid grid-cols-3 gap-5">
+
+                    <input
+                        type="number"
+                        className="border rounded-lg p-3"
+                        placeholder="Precio"
+                        value={product.price}
+                        onChange={(e) =>
+                            setProduct((prev) => ({
+                                ...prev,
+                                price: Number(e.target.value),
+                            }))
+                        }
+                    />
+
+                    <input
+                        type="number"
+                        className="border rounded-lg p-3"
+                        placeholder="Precio anterior"
+                        value={product.price_old}
+                        onChange={(e) =>
+                            setProduct((prev) => ({
+                                ...prev,
+                                price_old: Number(e.target.value),
+                            }))
+                        }
+                    />
+
+                    <input
+                        type="number"
+                        className="border rounded-lg p-3"
+                        placeholder="Stock"
+                        value={product.stock}
+                        onChange={(e) =>
+                            setProduct((prev) => ({
+                                ...prev,
+                                stock: Number(e.target.value),
+                            }))
+                        }
+                    />
+
+                </div>
+
+                <div className="grid grid-cols-4 gap-5">
+
+                    <input
+                        type="number"
+                        className="border rounded-lg p-3"
+                        placeholder="Peso"
+                        value={product.weight}
+                        onChange={(e) =>
+                            setProduct((prev) => ({
+                                ...prev,
+                                weight: Number(e.target.value),
+                            }))
+                        }
+                    />
+
+                    <input
+                        type="number"
+                        className="border rounded-lg p-3"
+                        placeholder="Ancho"
+                        value={product.width}
+                        onChange={(e) =>
+                            setProduct((prev) => ({
+                                ...prev,
+                                width: Number(e.target.value),
+                            }))
+                        }
+                    />
+
+                    <input
+                        type="number"
+                        className="border rounded-lg p-3"
+                        placeholder="Alto"
+                        value={product.height}
+                        onChange={(e) =>
+                            setProduct((prev) => ({
+                                ...prev,
+                                height: Number(e.target.value),
+                            }))
+                        }
+                    />
+
+                    <input
+                        type="number"
+                        className="border rounded-lg p-3"
+                        placeholder="Profundidad"
+                        value={product.depth}
+                        onChange={(e) =>
+                            setProduct((prev) => ({
+                                ...prev,
+                                depth: Number(e.target.value),
+                            }))
+                        }
+                    />
+
+                </div>
+
+                <div className="flex items-center gap-8">
+
+                    <label className="flex items-center gap-2">
+
+                        <input
+                            type="checkbox"
+                            checked={product.featured}
+                            onChange={(e) =>
+                                setProduct((prev) => ({
+                                    ...prev,
+                                    featured: e.target.checked,
+                                }))
+                            }
+                        />
+
+                        Destacado
+
+                    </label>
+
+                    <label className="flex items-center gap-2">
+
+                        <input
+                            type="checkbox"
+                            checked={product.active}
+                            onChange={(e) =>
+                                setProduct((prev) => ({
+                                    ...prev,
+                                    active: e.target.checked,
+                                }))
+                            }
+                        />
+
+                        Activo
+
+                    </label>
+
+                </div>
+
+                <button
+                    onClick={save}
+                    className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl"
+                >
+                    Guardar Cambios
+                </button>
+
+            </div>
+
+        </main>
+    );
 }

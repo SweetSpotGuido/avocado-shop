@@ -1,34 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { getProducts, deleteProduct } from "@/lib/product-service";
+import { Product } from "@/types/product";
+import {
+    getProducts,
+    deleteProduct,
+} from "@/lib/product-service";
 
 export default function ProductsPage() {
-    const [products, setProducts] = useState<any[]>([]);
+    const [products, setProducts] = useState<Product[]>([]);
 
-    async function loadProducts() {
+    const loadProducts = useCallback(async () => {
         const data = await getProducts();
-        setProducts(data);
-    }
+        setProducts(data as Product[]);
+    }, []);
 
     async function remove(id: number) {
         if (!confirm("¿Eliminar producto?")) return;
 
         await deleteProduct(id);
-
-        loadProducts();
+        await loadProducts();
     }
 
     useEffect(() => {
         loadProducts();
-    }, []);
+    }, [loadProducts]);
 
     return (
         <div>
-
             <div className="flex justify-between mb-8">
-
                 <h1 className="text-3xl font-bold">
                     Productos
                 </h1>
@@ -39,11 +40,24 @@ export default function ProductsPage() {
                 >
                     Nuevo Producto
                 </Link>
+            </div>
+
+            <div className="flex justify-between items-center mb-8">
+
+                <h1 className="text-3xl font-bold">
+                    Productos
+                </h1>
+
+                <Link
+                    href="/admin/products/new"
+                    className="bg-green-600 text-white px-5 py-3 rounded-lg hover:bg-green-700"
+                >
+                    Nuevo Producto
+                </Link>
 
             </div>
 
             <table className="w-full bg-white rounded-xl shadow">
-
                 <thead className="bg-zinc-100">
                     <tr>
                         <th className="p-4"></th>
@@ -56,16 +70,16 @@ export default function ProductsPage() {
                 </thead>
 
                 <tbody>
-
                     {products.map((product) => (
-
-                        <tr key={product.id} className="border-t">
-
+                        <tr
+                            key={product.id}
+                            className="border-t"
+                        >
                             <td className="p-3">
                                 <img
                                     src={product.image_url || "/no-image.png"}
-                                    className="w-16 h-16 rounded-lg object-cover"
                                     alt={product.name}
+                                    className="w-16 h-16 rounded-lg object-cover"
                                 />
                             </td>
 
@@ -85,7 +99,6 @@ export default function ProductsPage() {
 
                             <td>
                                 <div className="flex justify-center gap-4">
-
                                     <Link
                                         href={`/admin/products/${product.id}`}
                                         className="text-blue-600"
@@ -99,18 +112,12 @@ export default function ProductsPage() {
                                     >
                                         Eliminar
                                     </button>
-
                                 </div>
                             </td>
-
                         </tr>
-
                     ))}
-
                 </tbody>
-
             </table>
-
         </div>
     );
 }

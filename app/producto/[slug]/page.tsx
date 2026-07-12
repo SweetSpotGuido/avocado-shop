@@ -1,94 +1,64 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import Image from "next/image";
 
 import { getProductBySlug } from "@/lib/product-service";
-import { addToCart } from "@/lib/cart";
+import AddToCartButton from "@/components/AddToCartButton";
 
-export default function ProductPage() {
+interface Props {
+    params: Promise<{
+        slug: string;
+    }>;
+}
 
-  const { slug } = useParams();
+export default async function ProductPage({
+    params,
+}: Props) {
+    const { slug } = await params;
 
-  const [product, setProduct] = useState<any>(null);
+    const product = await getProductBySlug(slug);
 
-  useEffect(() => {
-    load();
-  }, []);
+    if (!product) notFound();
 
-  async function load() {
-    const data = await getProductBySlug(slug as string);
-    setProduct(data);
-  }
-
-  if (!product)
     return (
-      <main className="max-w-7xl mx-auto p-20">
-        Cargando...
-      </main>
+        <main className="max-w-7xl mx-auto p-10">
+
+            <div className="grid grid-cols-2 gap-16">
+
+                <Image
+                    src={product.image_url || "/no-image.png"}
+                    alt={product.name}
+                    width={700}
+                    height={700}
+                    className="rounded-xl w-full h-auto"
+                />
+                <div>
+
+                    <p className="text-gray-500">
+                        Categoría #{product.category_id}
+                    </p>
+
+                    <h1 className="text-5xl font-bold mt-3">
+                        {product.name}
+                    </h1>
+
+                    <p className="mt-8">
+                        {product.description}
+                    </p>
+
+                    <h2 className="text-5xl text-green-600 font-bold mt-10">
+                        ${Number(product.price).toLocaleString()}
+                    </h2>
+
+                    <p className="mt-5">
+                        Stock: {product.stock}
+                    </p>
+
+                    <AddToCartButton product={product} />
+
+                </div>
+
+            </div>
+
+        </main>
     );
-
-  return (
-    <main className="max-w-7xl mx-auto p-10">
-
-      <div className="grid grid-cols-2 gap-16">
-
-        <div>
-
-          <Image
-            src={product.image_url || "/no-image.png"}
-            alt={product.name}
-            width={700}
-            height={700}
-            className="rounded-xl w-full"
-          />
-
-        </div>
-
-        <div>
-
-          <p className="text-gray-500">
-
-            {product.category}
-
-          </p>
-
-          <h1 className="text-5xl font-bold mt-3">
-
-            {product.name}
-
-          </h1>
-
-          <p className="mt-8 text-gray-600 leading-8">
-
-            {product.description}
-
-          </p>
-
-          <h2 className="text-5xl font-bold text-green-600 mt-10">
-
-            ${Number(product.price).toLocaleString()}
-
-          </h2>
-
-          <p className="mt-4">
-
-            Stock disponible: {product.stock}
-
-          </p>
-
-          <button
-            onClick={() => addToCart(product)}
-            className="mt-10 bg-green-600 text-white px-10 py-4 rounded-xl text-lg"
-          >
-            Agregar al carrito
-          </button>
-
-        </div>
-
-      </div>
-
-    </main>
-  );
 }

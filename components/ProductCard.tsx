@@ -3,17 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { addToCart } from "@/lib/cart";
-
-interface Product {
-    id: number;
-    name: string;
-    slug: string;
-    description: string;
-    price: number;
-    stock: number;
-    image_url: string;
-    active: boolean;
-}
+import { Product } from "@/types/product";
 
 interface Props {
     product: Product;

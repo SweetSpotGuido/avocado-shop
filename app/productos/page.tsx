@@ -1,19 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Product } from "@/types/product";
-import { addToCart } from "@/lib/cart";
 import ProductCard from "@/components/ProductCard";
 
 export default function ProductosPage() {
     const [products, setProducts] = useState<Product[]>([]);
 
-    useEffect(() => {
-        loadProducts();
-    }, []);
-
-    async function loadProducts() {
+    const loadProducts = useCallback(async () => {
         const { data, error } = await supabase
             .from("products")
             .select("*")
@@ -25,12 +20,15 @@ export default function ProductosPage() {
             return;
         }
 
-        setProducts(data || []);
-    }
+        setProducts(data ?? []);
+    }, []);
+
+    useEffect(() => {
+        loadProducts();
+    }, [loadProducts]);
 
     return (
         <main className="max-w-7xl mx-auto p-10">
-
             <h1 className="text-4xl font-bold mb-8">
                 Productos
             </h1>
@@ -43,7 +41,6 @@ export default function ProductosPage() {
                     />
                 ))}
             </div>
-
         </main>
     );
 }
