@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Logo from "./Logo";
 import SearchBar from "./SearchBar";
+import UserMenu from "@/components/UserMenu";
 
 export default function Header() {
     return (
@@ -13,6 +14,8 @@ export default function Header() {
                 <Logo />
 
                 <SearchBar />
+
+                <UserMenu />
 
                 <nav className="flex items-center gap-6">
 

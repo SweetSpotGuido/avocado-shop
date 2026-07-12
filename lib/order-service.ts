@@ -1,10 +1,21 @@
 import { supabase } from "./supabase";
 import { Order } from "@/types/order";
 
-export async function createOrder(order: Order) {
+export async function createOrder(order: any) {
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+        throw new Error("Debe iniciar sesión");
+    }
+
     const { data, error } = await supabase
         .from("orders")
-        .insert(order)
+        .insert({
+            ...order,
+            user_id: user.id,
+        })
         .select()
         .single();
 
@@ -27,7 +38,10 @@ export async function getOrders() {
 export async function getOrder(id: number) {
     const { data, error } = await supabase
         .from("orders")
-        .select("*")
+        .select(`
+        *,
+        addresses(*)
+    `)
         .eq("id", id)
         .single();
 
@@ -70,4 +84,50 @@ export async function updateOrderStatus(
         .eq("id", id);
 
     if (error) throw error;
+}
+
+export async function getMyOrders() {
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return [];
+
+    const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return data ?? [];
+}
+
+export async function setOrderPaid(
+    orderId: number,
+    paymentId: string
+) {
+    const { error } = await supabase
+        .from("orders")
+        .update({
+            status: "Pagado",
+            payment_status: "approved",
+            mp_payment_id: paymentId,
+            paid_at: new Date().toISOString(),
+        })
+        .eq("id", orderId);
+
+    if (error) throw error;
+}
+
+export async function markEmailSent(
+    orderId: number
+) {
+    await supabase
+        .from("orders")
+        .update({
+            email_sent: true,
+        })
+        .eq("id", orderId);
 }

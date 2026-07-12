@@ -1,27 +1,60 @@
 interface Props {
     searchParams: Promise<{
-        id?: string;
+        collection_id?: string;
+        payment_id?: string;
+        status?: string;
+        external_reference?: string;
     }>;
 }
 
-export default async function OrderSuccessPage({
+export default async function Page({
     searchParams,
 }: Props) {
-    const { id } = await searchParams;
+
+    const params = await searchParams;
 
     return (
-        <main className="max-w-4xl mx-auto p-20 text-center">
-            <h1 className="text-5xl font-bold text-green-600">
-                ¡Gracias por tu compra!
-            </h1>
 
-            <p className="mt-8 text-2xl">
-                Número de pedido
-            </p>
+        <main className="max-w-3xl mx-auto py-24 text-center">
 
-            <h2 className="text-6xl font-bold mt-4">
-                #{id}
-            </h2>
+            <div className="bg-white rounded-xl shadow p-12">
+
+                <h1 className="text-5xl font-bold text-green-600">
+
+                    ¡Pago aprobado!
+
+                </h1>
+
+                <p className="mt-8">
+
+                    Pedido:
+
+                    <strong>
+
+                        {" "}
+                        #{params.external_reference}
+
+                    </strong>
+
+                </p>
+
+                <p className="mt-3">
+
+                    Pago:
+
+                    <strong>
+
+                        {" "}
+                        {params.payment_id}
+
+                    </strong>
+
+                </p>
+
+            </div>
+
         </main>
+
     );
+
 }

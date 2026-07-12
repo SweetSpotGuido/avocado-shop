@@ -1,154 +1,248 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { getCart, clearCart } from "@/lib/cart";
-import { createOrder } from "@/lib/order-service";
+import AddressSelector from "@/components/AddressSelector";
 
+import { getCart, clearCart } from "@/lib/cart";
+import { getUser } from "@/lib/auth";
+import { createOrder } from "@/lib/order-service";
 import { createOrderItems } from "@/lib/order-item-service";
-import { decreaseStock } from "@/lib/product-service";
 
 export default function CheckoutPage() {
     const router = useRouter();
 
-    const cart = getCart();
+    const [cart, setCart] = useState<any[]>([]);
 
-    const total = cart.reduce(
-        (a, b) => a + b.price * b.quantity,
-        0
-    );
+    const [addressId, setAddressId] = useState<number | null>(null);
 
     const [form, setForm] = useState({
-        customer_name: "",
-        customer_email: "",
-        customer_phone: "",
-        address: "",
-        city: "",
-        province: "",
-        zip_code: "",
+        name: "",
+        email: "",
+        phone: "",
     });
 
-    async function finishOrder() {
+    useEffect(() => {
+        load();
+    }, []);
 
-        const response = await fetch(
-            "/api/create-preference",
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
+    async function load() {
+        const user = await getUser();
 
-                    items: cart.map(item => ({
+        if (!user) {
+            router.push("/login");
+            return;
+        }
 
-                        title: item.name,
+        setForm({
+            name: "",
+            email: user.email ?? "",
+            phone: "",
+        });
 
-                        quantity: item.quantity,
+        const items = getCart();
 
-                        currency_id: "ARS",
+        if (items.length === 0) {
+            router.push("/cart");
+            return;
+        }
 
-                        unit_price: Number(item.price),
+        setCart(items);
+    }
 
-                    })),
-
-                }),
-            }
+    const total = useMemo(() => {
+        return cart.reduce(
+            (sum, item) =>
+                sum + Number(item.price) * item.quantity,
+            0
         );
+    }, [cart]);
 
-        const preference = await response.json();
+    async function finishOrder() {
+        const user = await getUser();
 
-        window.location.href = preference.init_point;
+        if (!user) {
+            router.push("/login");
+            return;
+        }
 
+        if (!addressId) {
+            alert("Seleccioná una dirección.");
+            return;
+        }
+
+        try {
+            const order = await createOrder({
+                customer_name: form.name,
+                customer_email: form.email,
+                customer_phone: form.phone,
+
+                address_id: addressId,
+
+                total,
+
+                status: "Pendiente",
+
+                payment_status: "pending",
+            });
+
+            await createOrderItems(
+                order.id,
+                cart
+            );
+
+            clearCart();
+
+            router.push(
+                `/checkout/payment?order=${order.id}`
+            );
+
+        } catch (error) {
+            console.error(error);
+            alert("No se pudo crear el pedido.");
+        }
     }
 
     return (
-        <main className="max-w-4xl mx-auto p-10">
+        <main className="max-w-6xl mx-auto py-12">
 
-            <h1 className="text-4xl font-bold mb-8">
+            <h1 className="text-4xl font-bold mb-10">
                 Checkout
             </h1>
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-10">
 
-                <input
-                    className="border rounded p-3 w-full"
-                    placeholder="Nombre"
-                    onChange={(e) =>
-                        setForm({ ...form, customer_name: e.target.value })
-                    }
-                />
+                <div className="space-y-6">
 
-                <input
-                    className="border rounded p-3 w-full"
-                    placeholder="Email"
-                    onChange={(e) =>
-                        setForm({ ...form, customer_email: e.target.value })
-                    }
-                />
+                    <div className="bg-white rounded-xl shadow p-6">
 
-                <input
-                    className="border rounded p-3 w-full"
-                    placeholder="Teléfono"
-                    onChange={(e) =>
-                        setForm({ ...form, customer_phone: e.target.value })
-                    }
-                />
+                        <h2 className="text-2xl font-bold mb-5">
+                            Datos del comprador
+                        </h2>
 
-                <input
-                    className="border rounded p-3 w-full"
-                    placeholder="Dirección"
-                    onChange={(e) =>
-                        setForm({ ...form, address: e.target.value })
-                    }
-                />
+                        <input
+                            className="border rounded-lg p-3 w-full mb-4"
+                            placeholder="Nombre"
+                            value={form.name}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    name: e.target.value,
+                                })
+                            }
+                        />
 
-                <input
-                    className="border rounded p-3 w-full"
-                    placeholder="Ciudad"
-                    onChange={(e) =>
-                        setForm({ ...form, city: e.target.value })
-                    }
-                />
+                        <input
+                            className="border rounded-lg p-3 w-full mb-4"
+                            placeholder="Email"
+                            value={form.email}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    email: e.target.value,
+                                })
+                            }
+                        />
 
-                <input
-                    className="border rounded p-3 w-full"
-                    placeholder="Provincia"
-                    onChange={(e) =>
-                        setForm({ ...form, province: e.target.value })
-                    }
-                />
+                        <input
+                            className="border rounded-lg p-3 w-full"
+                            placeholder="Teléfono"
+                            value={form.phone}
+                            onChange={(e) =>
+                                setForm({
+                                    ...form,
+                                    phone: e.target.value,
+                                })
+                            }
+                        />
 
-                <input
-                    className="border rounded p-3 w-full"
-                    placeholder="Código Postal"
-                    onChange={(e) =>
-                        setForm({ ...form, zip_code: e.target.value })
-                    }
-                />
+                    </div>
 
-            </div>
+                    <div className="bg-white rounded-xl shadow p-6">
 
-            <div className="mt-10 bg-white rounded-xl shadow p-8">
+                        <h2 className="text-2xl font-bold mb-5">
+                            Dirección de envío
+                        </h2>
 
-                <h2 className="text-3xl font-bold">
+                        <AddressSelector
+                            value={addressId}
+                            onChange={setAddressId}
+                        />
 
-                    Total
+                    </div>
 
-                </h2>
+                </div>
 
-                <p className="text-5xl text-green-600 font-bold mt-4">
+                <div className="bg-white rounded-xl shadow p-6 h-fit">
 
-                    ${total.toLocaleString()}
+                    <h2 className="text-2xl font-bold mb-6">
+                        Resumen
+                    </h2>
 
-                </p>
+                    <div className="space-y-4">
 
-                <button
-                    onClick={finishOrder}
-                    className="mt-8 bg-green-600 text-white w-full py-4 rounded-lg"
-                >
-                    Confirmar Pedido
-                </button>
+                        {cart.map((item) => (
+
+                            <div
+                                key={item.id}
+                                className="flex justify-between"
+                            >
+
+                                <div>
+
+                                    <p className="font-medium">
+                                        {item.name}
+                                    </p>
+
+                                    <p className="text-sm text-gray-500">
+
+                                        {item.quantity} × $
+                                        {Number(item.price).toLocaleString()}
+
+                                    </p>
+
+                                </div>
+
+                                <strong>
+
+                                    $
+                                    {(
+                                        Number(item.price) *
+                                        item.quantity
+                                    ).toLocaleString()}
+
+                                </strong>
+
+                            </div>
+
+                        ))}
+
+                    </div>
+
+                    <hr className="my-6" />
+
+                    <div className="flex justify-between text-2xl font-bold">
+
+                        <span>Total</span>
+
+                        <span>
+
+                            $
+                            {total.toLocaleString()}
+
+                        </span>
+
+                    </div>
+
+                    <button
+                        onClick={finishOrder}
+                        className="mt-8 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold"
+                    >
+                        Continuar al pago
+                    </button>
+
+                </div>
 
             </div>
 

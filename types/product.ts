@@ -1,25 +1,27 @@
 export interface Product {
     id: number;
+
     name: string;
     slug: string;
     description: string;
 
-    category_id: number;
+    category_id?: number;
+    category?: string;
 
-    sku: string;
-    barcode: string;
+    sku?: string;
+    barcode?: string;
 
     image_url: string;
 
     price: number;
-    price_old: number;
+    price_old?: number;
 
     stock: number;
 
-    weight: number;
-    width: number;
-    height: number;
-    depth: number;
+    weight?: number;
+    width?: number;
+    height?: number;
+    depth?: number;
 
     featured: boolean;
     active: boolean;
@@ -27,4 +29,7 @@ export interface Product {
     created_at?: string;
 }
 
-export type ProductInput = Omit<Product, "id" | "created_at">;
+export type ProductInput = Omit<
+    Product,
+    "id" | "created_at"
+>;

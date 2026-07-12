@@ -35,9 +35,17 @@ export default function ProductCard({ product }: Props) {
                     {product.description}
                 </p>
 
-                <p className="text-3xl font-bold text-green-600 mt-4">
-                    ${Number(product.price).toLocaleString()}
-                </p>
+                <div className="mt-4">
+                    {product.price_old && product.price_old > product.price && (
+                        <p className="text-gray-400 line-through">
+                            ${Number(product.price_old).toLocaleString()}
+                        </p>
+                    )}
+
+                    <p className="text-3xl font-bold text-green-600">
+                        ${Number(product.price).toLocaleString()}
+                    </p>
+                </div>
 
                 <p className="text-sm text-gray-500 mt-2">
                     Stock: {product.stock}
@@ -53,13 +61,13 @@ export default function ProductCard({ product }: Props) {
                     </Link>
 
                     <button
-                        onClick={() => {
-                            addToCart(product);
-                            alert("Producto agregado al carrito");
-                        }}
-                        className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700"
+                        disabled={product.stock <= 0}
+                        className={`flex-1 py-3 rounded-lg text-white ${product.stock > 0
+                            ? "bg-green-600 hover:bg-green-700"
+                            : "bg-gray-400 cursor-not-allowed"
+                            }`}
                     >
-                        Comprar
+                        {product.stock > 0 ? "Comprar" : "Sin stock"}
                     </button>
 
                 </div>

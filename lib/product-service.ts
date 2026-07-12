@@ -92,7 +92,7 @@ export async function decreaseStock(
     const { error } = await supabase
         .from("products")
         .update({
-            stock: product.stock - quantity,
+            stock: Math.max(product.stock - quantity, 0)
         })
         .eq("id", id);
 

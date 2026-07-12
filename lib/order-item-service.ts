@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { decreaseStock } from "./product-service";
 
 export async function getOrderItems(orderId: number) {
     const { data, error } = await supabase
@@ -29,4 +30,17 @@ export async function createOrderItems(
         .insert(rows);
 
     if (error) throw error;
+}
+
+export async function decreaseOrderStock(
+    orderId: number
+) {
+    const items = await getOrderItems(orderId);
+
+    for (const item of items) {
+        await decreaseStock(
+            item.product_id,
+            item.quantity
+        );
+    }
 }

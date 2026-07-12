@@ -2,6 +2,7 @@ import { getOrder } from "@/lib/order-service";
 import { getOrderItems } from "@/lib/order-item-service";
 import OrderStatus from "@/components/OrderStatus";
 import ShippingCard from "@/components/ShippingCard";
+import ShippingActions from "@/components/ShippingActions";
 
 interface Props {
     params: Promise<{
@@ -175,6 +176,36 @@ export default async function OrderPage({
                         {order.payment_status}
                     </p>
 
+                    <p>
+
+                        <strong>Empresa:</strong>
+
+                        {" "}
+
+                        {order.shipping_provider || "-"}
+
+                    </p>
+
+                    <p>
+
+                        <strong>Tracking:</strong>
+
+                        {" "}
+
+                        {order.tracking_code || "-"}
+
+                    </p>
+
+                    <p>
+
+                        <strong>Estado envío:</strong>
+
+                        {" "}
+
+                        {order.shipping_status || "-"}
+
+                    </p>
+
                     <p className="text-3xl font-bold text-green-600">
 
                         ${Number(order.total).toLocaleString()}
@@ -182,6 +213,11 @@ export default async function OrderPage({
                     </p>
 
                     <ShippingCard order={order} />
+
+                    <ShippingActions
+                        orderId={order.id}
+                        label={order.shipping_label_url}
+                    />
 
                 </div>
 
